@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class TasksAdapter(private val dataSet: Array<String>) :
+class TasksAdapter(private val taskList: List<Task>) :
     RecyclerView.Adapter<TasksAdapter.ViewHolder>() {
 
     /**
@@ -35,10 +35,10 @@ class TasksAdapter(private val dataSet: Array<String>) :
 
         // Get element from your dataset at this position and replace the
         // contents of the view with that element
-        viewHolder.textView.text = dataSet[position]
+        viewHolder.textView.text = taskList.get(position).title
     }
 
     // Return the size of your dataset (invoked by the layout manager)
-    override fun getItemCount() = dataSet.size
+    override fun getItemCount() = taskList.size
 
 }
