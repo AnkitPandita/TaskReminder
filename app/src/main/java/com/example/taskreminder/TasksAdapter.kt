@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import java.text.SimpleDateFormat
 
 class TasksAdapter(private val taskList: List<Task>) :
     RecyclerView.Adapter<TasksAdapter.ViewHolder>() {
@@ -15,10 +16,14 @@ class TasksAdapter(private val taskList: List<Task>) :
      */
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val textView: TextView
+        val textView2: TextView
+        val textView3: TextView
 
         init {
             // Define click listener for the ViewHolder's View.
             textView = view.findViewById(R.id.textView)
+            textView2 = view.findViewById(R.id.textView2)
+            textView3 = view.findViewById(R.id.textView3)
         }
     }
 
@@ -36,6 +41,10 @@ class TasksAdapter(private val taskList: List<Task>) :
         // Get element from your dataset at this position and replace the
         // contents of the view with that element
         viewHolder.textView.text = taskList.get(position).title
+        viewHolder.textView2.text = taskList.get(position).body
+        val sdf = SimpleDateFormat("yyyy/MM/dd HH:mm")
+        //Log.d("Hiiii", sdf.format(cal.time))
+        viewHolder.textView3.text =  sdf.format(taskList.get(position).date)
     }
 
     // Return the size of your dataset (invoked by the layout manager)

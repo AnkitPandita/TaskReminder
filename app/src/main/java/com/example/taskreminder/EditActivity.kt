@@ -2,13 +2,16 @@ package com.example.taskreminder
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.format.DateFormat
+import android.view.MenuItem
 import android.widget.Button
 import android.widget.DatePicker
 import android.widget.EditText
 import android.widget.TimePicker
+import kotlinx.android.synthetic.main.activity_edit.*
 import java.util.*
 
 class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
@@ -28,9 +31,22 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
     private var myMinute: Int = 0
     lateinit var calendar: Calendar
 
+    companion object {
+        const val RESULT_CODE = 5000
+        const val KEY_TITLE = "title"
+        const val KEY_BODY = "body"
+        const val KEY_DAY = "day"
+        const val KEY_YEAR = "year"
+        const val KEY_MONTH = "month"
+        const val KEY_HOUR = "hour"
+        const val KEY_MIN = "min"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit)
+        etTitle = et_title
+        etBody = et_body
         btnDateTime = findViewById(R.id.btn_set_datetime)
         btnDateTime.setOnClickListener {
             calendar = Calendar.getInstance()
@@ -43,9 +59,9 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
     }
 
     override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
-        myDay = day
+        myDay = dayOfMonth
         myYear = year
-        myMonth = month
+        myMonth = month + 1
         calendar = Calendar.getInstance()
         hour = calendar.get(Calendar.HOUR)
         minute = calendar.get(Calendar.MINUTE)
@@ -64,6 +80,26 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
             minStr = "$myMinute"
         }
         btnDateTime.text = "$myMonth/$myDay/$myYear at $myHour:$minStr"
+    }
+
+    override fun onBackPressed() {
+        var intent = Intent()
+        intent.putExtra(KEY_TITLE, etTitle.text.toString().trim())
+        intent.putExtra(KEY_BODY, etBody.text.toString().trim())
+        intent.putExtra(KEY_DAY, myDay)
+        intent.putExtra(KEY_YEAR, myYear)
+        intent.putExtra(KEY_MONTH, myMonth)
+        intent.putExtra(KEY_HOUR, myHour)
+        intent.putExtra(KEY_MIN, myMinute)
+        setResult(RESULT_CODE, intent)
+        finish()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            onBackPressed()
+        }
+        return true
     }
 
     /*fun DatePicker.getDate(): Date {

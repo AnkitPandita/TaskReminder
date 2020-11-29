@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">TaskReminder</string>
+    <string name="preference_file_key">com.example</string>
 </resources>
