@@ -1,4 +1,4 @@
-package ru.ifr0z.notify.work
+package com.example.taskreminder
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -23,8 +23,7 @@ import androidx.core.app.NotificationCompat.PRIORITY_MAX
 import androidx.work.ListenableWorker.Result.success
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import com.example.taskreminder.MainActivity
-import com.example.taskreminder.R
+import com.example.taskreminder.extension.vectorToBitmap
 
 class NotifyWork(context: Context, params: WorkerParameters) : Worker(context, params) {
 
@@ -43,12 +42,12 @@ class NotifyWork(context: Context, params: WorkerParameters) : Worker(context, p
         val notificationManager =
             applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-        //val titleNotification = applicationContext.getString(R.string.notification_title)
-        val titleNotification = "Title"
-        //val subtitleNotification = applicationContext.getString(R.string.notification_subtitle)
-        val subtitleNotification = "Body"
+        val bitmap = applicationContext.vectorToBitmap(R.drawable.ic_schedule_black_24dp)
+        val titleNotification = applicationContext.getString(R.string.notification_title)
+        val subtitleNotification = applicationContext.getString(R.string.notification_subtitle)
         val pendingIntent = getActivity(applicationContext, 0, intent, 0)
         val notification = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL)
+            .setLargeIcon(bitmap).setSmallIcon(R.drawable.ic_schedule_white)
             .setContentTitle(titleNotification).setContentText(subtitleNotification)
             .setDefaults(DEFAULT_ALL).setContentIntent(pendingIntent).setAutoCancel(true)
 

@@ -63,7 +63,7 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
         myYear = year
         myMonth = month + 1
         calendar = Calendar.getInstance()
-        hour = calendar.get(Calendar.HOUR)
+        hour = calendar.get(Calendar.HOUR_OF_DAY)
         minute = calendar.get(Calendar.MINUTE)
         val timePickerDialog =
             TimePickerDialog(this, this, hour, minute, DateFormat.is24HourFormat(this))

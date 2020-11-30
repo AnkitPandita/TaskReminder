@@ -13,7 +13,6 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import ru.ifr0z.notify.work.NotifyWork
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
@@ -53,53 +52,64 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE && resultCode == EditActivity.RESULT_CODE) {
-            val title = data?.extras?.getString(EditActivity.KEY_TITLE)
-            val body = data?.extras?.getString(EditActivity.KEY_BODY)
+            val title: String? = data?.extras?.getString(EditActivity.KEY_TITLE)
+            val body: String? = data?.extras?.getString(EditActivity.KEY_BODY)
             val day = data?.extras?.getInt(EditActivity.KEY_DAY)
             val year = data?.extras?.getInt(EditActivity.KEY_YEAR)
             val month = data?.extras?.getInt(EditActivity.KEY_MONTH)
             val hour = data?.extras?.getInt(EditActivity.KEY_HOUR)
             val min = data?.extras?.getInt(EditActivity.KEY_MIN)
-            val cal = Calendar.getInstance();
-            if (day != null) {
-                cal.set(Calendar.DAY_OF_MONTH, day)
-            }
-            if (year != null) {
-                cal.set(Calendar.YEAR, year)
-            }
-            if (month != null) {
-                cal.set(Calendar.MONTH, month - 1)
-            }
-            if (hour != null) {
-                cal.set(Calendar.HOUR, hour)
-            }
-            if (min != null) {
-                cal.set(Calendar.MINUTE, min)
-            }
-            cal.set(Calendar.SECOND, 0)
-            // val sdf = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
-            // Log.d("Hiiii", sdf.format(cal.time))
-            val dateTime = cal.time
-            if (title != null || body != null) {
+
+            if ((title != null && !title.contentEquals(""))
+                || (body != null && !body.contentEquals(""))
+            ) {
                 val task = Task(UUID.randomUUID().toString());
                 task.title = title
                 task.body = body
-                task.date = dateTime
+
+                var dateTime: Date? = null
+                val cal = Calendar.getInstance()
+                if (day != 0 && year != 0 && month != 0) {
+                    if (day != null) {
+                        cal.set(Calendar.DAY_OF_MONTH, day)
+                    }
+                    if (year != null) {
+                        cal.set(Calendar.YEAR, year)
+                    }
+                    if (month != null) {
+                        cal.set(Calendar.MONTH, month - 1)
+                    }
+                    if (hour != null) {
+                        cal.set(Calendar.HOUR_OF_DAY, hour)
+                    }
+                    if (min != null) {
+                        cal.set(Calendar.MINUTE, min)
+                    }
+                    cal.set(Calendar.SECOND, 0)
+                    // val sdf = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+                    // Log.d("Hiiii", sdf.format(cal.time))
+                    dateTime = cal.time
+                }
+                if (dateTime != null) {
+                    task.date = dateTime
+                    val customTime = cal.timeInMillis
+                    val currentTime = System.currentTimeMillis()
+                    if (customTime > currentTime) {
+                        val notificationData =
+                            Data.Builder().putInt(NotifyWork.NOTIFICATION_ID, 0).build()
+                        val delay = customTime - currentTime
+                        scheduleNotification(delay, notificationData)
+                        Log.d("Msg", "Success")
+                    } else {
+                        Log.d("Msg", "Failed")
+                        // val errorNotificationSchedule = getString(R.string.notification_schedule_error)
+                        // Snackbar.make(coordinator_l, errorNotificationSchedule, Snackbar.LENGTH_LONG).show()
+                    }
+                }
                 taskList.add(task)
                 taskAdapter.notifyDataSetChanged()
             }
-            val customTime = cal.timeInMillis
-            val currentTime = System.currentTimeMillis()
-            if (customTime > currentTime) {
-                val notificationData = Data.Builder().putInt(NotifyWork.NOTIFICATION_ID, 0).build()
-                val delay = customTime - currentTime
-                scheduleNotification(delay, notificationData)
-                Log.d("Msg","Success")
-            } else {
-                Log.d("Msg","Failed")
-                // val errorNotificationSchedule = getString(R.string.notification_schedule_error)
-                // Snackbar.make(coordinator_l, errorNotificationSchedule, Snackbar.LENGTH_LONG).show()
-            }
+
         }
     }
 

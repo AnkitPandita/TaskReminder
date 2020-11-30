@@ -30,7 +30,8 @@ class TasksAdapter(private val taskList: List<Task>) :
     // Create new views (invoked by the layout manager)
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
         // Create a new view, which defines the UI of the list item
-        val view = LayoutInflater.from(viewGroup.context).inflate(R.layout.layout_item_rv_tasks, viewGroup, false)
+        val view = LayoutInflater.from(viewGroup.context)
+            .inflate(R.layout.layout_item_rv_tasks, viewGroup, false)
 
         return ViewHolder(view)
     }
@@ -40,11 +41,26 @@ class TasksAdapter(private val taskList: List<Task>) :
 
         // Get element from your dataset at this position and replace the
         // contents of the view with that element
-        viewHolder.textView.text = taskList.get(position).title
-        viewHolder.textView2.text = taskList.get(position).body
-        val sdf = SimpleDateFormat("yyyy/MM/dd HH:mm")
-        //Log.d("Hiiii", sdf.format(cal.time))
-        viewHolder.textView3.text =  sdf.format(taskList.get(position).date)
+        val title = taskList.get(position).title
+        val body = taskList.get(position).body
+        val date = taskList.get(position).date
+        if (title == null || title.contentEquals("")) {
+            viewHolder.textView.visibility = View.GONE
+        } else {
+            viewHolder.textView.text = title
+        }
+        if (body == null || body.contentEquals("")) {
+            viewHolder.textView2.visibility = View.GONE
+        } else {
+            viewHolder.textView2.text = body
+        }
+        if (date == null) {
+            viewHolder.textView3.visibility = View.GONE
+        } else {
+            val sdf = SimpleDateFormat("yyyy/MM/dd HH:mm")
+            //Log.d("Hiiii", sdf.format(cal.time))
+            viewHolder.textView3.text = sdf.format(date)
+        }
     }
 
     // Return the size of your dataset (invoked by the layout manager)
