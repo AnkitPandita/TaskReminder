@@ -7,10 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.MenuItem
-import android.widget.Button
-import android.widget.DatePicker
-import android.widget.EditText
-import android.widget.TimePicker
+import android.view.View
+import android.widget.*
 import kotlinx.android.synthetic.main.activity_edit.*
 import java.util.*
 
@@ -19,6 +17,7 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
     private lateinit var etTitle: EditText
     private lateinit var etBody: EditText
     lateinit var btnDateTime: Button
+    lateinit var ibCross: ImageButton
     private var day = 0
     private var month: Int = 0
     private var year: Int = 0
@@ -29,7 +28,7 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
     private var myYear: Int = 0
     private var myHour: Int = 0
     private var myMinute: Int = 0
-    lateinit var calendar: Calendar
+    private lateinit var calendar: Calendar
 
     companion object {
         const val RESULT_CODE = 5000
@@ -47,6 +46,16 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
         setContentView(R.layout.activity_edit)
         etTitle = et_title
         etBody = et_body
+        ibCross = findViewById(R.id.ib_cross)
+        ibCross.setOnClickListener {
+            myDay = 0
+            myMonth = 0
+            myYear = 0
+            myHour = 0
+            myMinute = 0
+            btnDateTime.text = "Set Reminder"
+            ibCross.visibility = View.GONE
+        }
         btnDateTime = findViewById(R.id.btn_set_datetime)
         btnDateTime.setOnClickListener {
             calendar = Calendar.getInstance()
@@ -68,6 +77,8 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
         val timePickerDialog =
             TimePickerDialog(this, this, hour, minute, DateFormat.is24HourFormat(this))
         timePickerDialog.show()
+        btnDateTime.text = "$myMonth/$myDay/$myYear"
+        ibCross.visibility = View.VISIBLE
     }
 
     override fun onTimeSet(view: TimePicker?, hourOfDay: Int, minute: Int) {
@@ -80,6 +91,7 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
             minStr = "$myMinute"
         }
         btnDateTime.text = "$myMonth/$myDay/$myYear at $myHour:$minStr"
+        ibCross.visibility = View.VISIBLE
     }
 
     override fun onBackPressed() {

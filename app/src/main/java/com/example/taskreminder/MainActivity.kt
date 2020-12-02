@@ -63,7 +63,8 @@ class MainActivity : AppCompatActivity() {
             if ((title != null && !title.contentEquals(""))
                 || (body != null && !body.contentEquals(""))
             ) {
-                val task = Task(UUID.randomUUID().toString());
+                val id = UUID.randomUUID().toString()
+                val task = Task(id)
                 task.title = title
                 task.body = body
 
@@ -95,8 +96,8 @@ class MainActivity : AppCompatActivity() {
                     val customTime = cal.timeInMillis
                     val currentTime = System.currentTimeMillis()
                     if (customTime > currentTime) {
-                        val notificationData =
-                            Data.Builder().putInt(NotifyWork.NOTIFICATION_ID, 0).build()
+                        NotifyWork.NOTIFICATION_ID = id
+                        val notificationData = Data.Builder().putInt(id, 0).build()
                         val delay = customTime - currentTime
                         scheduleNotification(delay, notificationData)
                         Log.d("Msg", "Success")

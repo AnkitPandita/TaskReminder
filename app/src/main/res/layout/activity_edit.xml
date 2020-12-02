@@ -39,16 +39,38 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/et_title" />
 
-    <Button
-        android:id="@+id/btn_set_datetime"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="7dp"
-        android:background="@android:color/transparent"
-        android:drawableStart="@drawable/ic_baseline_notifications_active_24"
-        android:text="Button"
-        android:textAllCaps="false"
+        android:gravity="center"
+        android:orientation="horizontal"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/et_body" />
+        app:layout_constraintTop_toBottomOf="@+id/et_body">
+
+        <Button
+            android:id="@+id/btn_set_datetime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:drawableStart="@drawable/ic_baseline_notifications_active_24"
+            android:drawablePadding="10dp"
+            android:padding="5dp"
+            android:text="Set Reminder"
+            android:textAllCaps="false"
+            tools:layout_editor_absoluteX="7dp"
+            tools:layout_editor_absoluteY="105dp" />
+
+        <ImageButton
+            android:id="@+id/ib_cross"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:visibility="gone"
+            android:background="@android:color/transparent"
+            app:srcCompat="@android:drawable/btn_dialog"
+            tools:layout_editor_absoluteX="373dp"
+            tools:layout_editor_absoluteY="105dp" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
