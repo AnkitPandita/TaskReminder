@@ -5,16 +5,11 @@ import android.content.Intent
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.work.Data
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import java.util.*
-import java.util.concurrent.TimeUnit
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
@@ -22,10 +17,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var gridLayoutManager: GridLayoutManager
     private lateinit var taskList: ArrayList<Task>
     private lateinit var taskAdapter: TasksAdapter
-    private lateinit var sharedPref: SharedPreferences
+    private lateinit var sharedPreferences: SharedPreferences
 
     companion object {
         const val REQUEST_CODE = 100
+        const val KEY_SP = "keySP"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,94 +31,38 @@ class MainActivity : AppCompatActivity() {
         val fab = findViewById<FloatingActionButton>(R.id.floatingActionButton)
         gridLayoutManager = GridLayoutManager(this, 2)
         rvTasks.layoutManager = gridLayoutManager
-        sharedPref = getSharedPreferences(
+        sharedPreferences = getSharedPreferences(
             getString(R.string.preference_file_key), Context.MODE_PRIVATE
         )
-        taskList = ArrayList<Task>()
 
-        taskAdapter = TasksAdapter(taskList)
+        val strTaskList = sharedPreferences.getString(KEY_SP, null)
+        if (strTaskList != null) {
+            val itemType = object : TypeToken<ArrayList<Task>>() {}.type
+            taskList = Gson().fromJson<ArrayList<Task>>(strTaskList, itemType)
+        } else {
+            taskList = ArrayList()
+        }
+        taskAdapter = TasksAdapter(this, taskList, sharedPreferences)
         rvTasks.adapter = taskAdapter
 
         fab.setOnClickListener {
-            val intent = Intent(this, EditActivity::class.java)
-            startActivityForResult(intent, 100)
+            val intentEdit = Intent(this, EditActivity::class.java)
+            startActivityForResult(intentEdit, REQUEST_CODE)
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE && resultCode == EditActivity.RESULT_CODE) {
-            val title: String? = data?.extras?.getString(EditActivity.KEY_TITLE)
-            val body: String? = data?.extras?.getString(EditActivity.KEY_BODY)
-            val day = data?.extras?.getInt(EditActivity.KEY_DAY)
-            val year = data?.extras?.getInt(EditActivity.KEY_YEAR)
-            val month = data?.extras?.getInt(EditActivity.KEY_MONTH)
-            val hour = data?.extras?.getInt(EditActivity.KEY_HOUR)
-            val min = data?.extras?.getInt(EditActivity.KEY_MIN)
-
-            if ((title != null && !title.contentEquals(""))
-                || (body != null && !body.contentEquals(""))
-            ) {
-                val id = UUID.randomUUID().toString()
-                val task = Task(id)
-                task.title = title
-                task.body = body
-
-                var dateTime: Date? = null
-                val cal = Calendar.getInstance()
-                if (day != 0 && year != 0 && month != 0) {
-                    if (day != null) {
-                        cal.set(Calendar.DAY_OF_MONTH, day)
-                    }
-                    if (year != null) {
-                        cal.set(Calendar.YEAR, year)
-                    }
-                    if (month != null) {
-                        cal.set(Calendar.MONTH, month - 1)
-                    }
-                    if (hour != null) {
-                        cal.set(Calendar.HOUR_OF_DAY, hour)
-                    }
-                    if (min != null) {
-                        cal.set(Calendar.MINUTE, min)
-                    }
-                    cal.set(Calendar.SECOND, 0)
-                    // val sdf = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
-                    // Log.d("Hiiii", sdf.format(cal.time))
-                    dateTime = cal.time
-                }
-                if (dateTime != null) {
-                    task.date = dateTime
-                    val customTime = cal.timeInMillis
-                    val currentTime = System.currentTimeMillis()
-                    if (customTime > currentTime) {
-                        NotifyWork.NOTIFICATION_ID = id
-                        val notificationData = Data.Builder().putInt(id, 0).build()
-                        val delay = customTime - currentTime
-                        scheduleNotification(delay, notificationData)
-                        Log.d("Msg", "Success")
-                    } else {
-                        Log.d("Msg", "Failed")
-                        // val errorNotificationSchedule = getString(R.string.notification_schedule_error)
-                        // Snackbar.make(coordinator_l, errorNotificationSchedule, Snackbar.LENGTH_LONG).show()
-                    }
-                }
-                taskList.add(task)
+            if (data?.extras?.getSerializable(EditActivity.KEY_TASK) != null) {
+                val task: Task = data.extras?.getSerializable(EditActivity.KEY_TASK) as Task
+                taskList.add(0, task)
+                val editor: SharedPreferences.Editor = sharedPreferences.edit()
+                editor.putString(KEY_SP, Gson().toJson(taskList))
+                editor.apply()
                 taskAdapter.notifyDataSetChanged()
             }
-
         }
-    }
-
-    private fun scheduleNotification(delay: Long, data: Data) {
-        val notificationWork = OneTimeWorkRequest.Builder(NotifyWork::class.java)
-            .setInitialDelay(delay, TimeUnit.MILLISECONDS).setInputData(data).build()
-
-        val instanceWorkManager = WorkManager.getInstance(this)
-        instanceWorkManager.beginUniqueWork(
-            NotifyWork.NOTIFICATION_WORK,
-            ExistingWorkPolicy.REPLACE, notificationWork
-        ).enqueue()
     }
 
 }

@@ -6,11 +6,17 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import kotlinx.android.synthetic.main.activity_edit.*
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
     TimePickerDialog.OnTimeSetListener {
@@ -29,16 +35,11 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
     private var myHour: Int = 0
     private var myMinute: Int = 0
     private lateinit var calendar: Calendar
+    private var oldTaskObj: Task? = null
 
     companion object {
         const val RESULT_CODE = 5000
-        const val KEY_TITLE = "title"
-        const val KEY_BODY = "body"
-        const val KEY_DAY = "day"
-        const val KEY_YEAR = "year"
-        const val KEY_MONTH = "month"
-        const val KEY_HOUR = "hour"
-        const val KEY_MIN = "min"
+        const val KEY_TASK = "task"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,6 +47,7 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
         setContentView(R.layout.activity_edit)
         etTitle = et_title
         etBody = et_body
+        calendar = Calendar.getInstance()
         ibCross = findViewById(R.id.ib_cross)
         ibCross.setOnClickListener {
             myDay = 0
@@ -58,12 +60,31 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
         }
         btnDateTime = findViewById(R.id.btn_set_datetime)
         btnDateTime.setOnClickListener {
-            calendar = Calendar.getInstance()
             day = calendar.get(Calendar.DAY_OF_MONTH)
             month = calendar.get(Calendar.MONTH)
             year = calendar.get(Calendar.YEAR)
             val datePickerDialog = DatePickerDialog(this, this, year, month, day)
             datePickerDialog.show()
+        }
+        if (intent.extras?.getSerializable(KEY_TASK) != null) {
+            oldTaskObj = intent.extras?.getSerializable(KEY_TASK) as Task?
+            etTitle.setText(oldTaskObj?.title)
+            etBody.setText(oldTaskObj?.body)
+            if (oldTaskObj?.date != null) {
+                val date: Date = oldTaskObj!!.date!!
+                myDay = date.date
+                myMonth = date.month + 1
+                myYear = date.year + 1900
+                myHour = date.hours
+                myMinute = date.minutes
+                val minStr: String
+                if (myMinute / 10 == 0) {
+                    minStr = "0$myMinute"
+                } else {
+                    minStr = "$myMinute"
+                }
+                btnDateTime.text = "$myMonth/$myDay/$myYear at $myHour:$minStr"
+            }
         }
     }
 
@@ -84,7 +105,7 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
     override fun onTimeSet(view: TimePicker?, hourOfDay: Int, minute: Int) {
         myHour = hourOfDay
         myMinute = minute
-        var minStr: String
+        val minStr: String
         if (myMinute / 10 == 0) {
             minStr = "0$myMinute"
         } else {
@@ -95,16 +116,72 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
     }
 
     override fun onBackPressed() {
-        var intent = Intent()
-        intent.putExtra(KEY_TITLE, etTitle.text.toString().trim())
-        intent.putExtra(KEY_BODY, etBody.text.toString().trim())
-        intent.putExtra(KEY_DAY, myDay)
-        intent.putExtra(KEY_YEAR, myYear)
-        intent.putExtra(KEY_MONTH, myMonth)
-        intent.putExtra(KEY_HOUR, myHour)
-        intent.putExtra(KEY_MIN, myMinute)
-        setResult(RESULT_CODE, intent)
+        val intentBack = Intent()
+        val title = etTitle.text.toString().trim()
+        val body = etBody.text.toString().trim()
+        val day = myDay
+        val year = myYear
+        val month = myMonth
+        val hour = myHour
+        val min = myMinute
+
+        if ((!title.contentEquals(""))
+            || (!body.contentEquals(""))
+        ) {
+            val task: Task
+            if (oldTaskObj != null) {
+                task = oldTaskObj as Task
+            } else {
+                val id = UUID.randomUUID().toString()
+                task = Task(id)
+            }
+            task.title = title
+            task.body = body
+
+            var dateTime: Date? = null
+            val cal = Calendar.getInstance()
+            if (day != 0 && year != 0 && month != 0) {
+                cal.set(Calendar.DAY_OF_MONTH, day)
+                cal.set(Calendar.YEAR, year)
+                cal.set(Calendar.MONTH, month - 1)
+                cal.set(Calendar.HOUR_OF_DAY, hour)
+                cal.set(Calendar.MINUTE, min)
+                cal.set(Calendar.SECOND, 0)
+                // val sdf = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+                // Log.d("Date", sdf.format(cal.time))
+                dateTime = cal.time
+            }
+            if (dateTime != null) {
+                task.date = dateTime
+                val customTime = cal.timeInMillis
+                val currentTime = System.currentTimeMillis()
+                if (customTime > currentTime) {
+                    NotifyWork.NOTIFICATION_ID = task.id
+                    val notificationData = Data.Builder().putInt(NotifyWork.NOTIFICATION_ID, 0).build()
+                    val delay = customTime - currentTime
+                    scheduleNotification(delay, notificationData)
+                    Log.d("Msg", "Success")
+                } else {
+                    Log.d("Msg", "Failed")
+                    // val errorNotificationSchedule = getString(R.string.notification_schedule_error)
+                    // Snackbar.make(coordinator_l, errorNotificationSchedule, Snackbar.LENGTH_LONG).show()
+                }
+            }
+            intentBack.putExtra(KEY_TASK, task)
+        }
+        setResult(RESULT_CODE, intentBack)
         finish()
+    }
+
+    private fun scheduleNotification(delay: Long, data: Data) {
+        val notificationWork = OneTimeWorkRequest.Builder(NotifyWork::class.java)
+            .setInitialDelay(delay, TimeUnit.MILLISECONDS).setInputData(data).build()
+
+        val instanceWorkManager = WorkManager.getInstance(this)
+        instanceWorkManager.beginUniqueWork(
+            NotifyWork.NOTIFICATION_WORK,
+            ExistingWorkPolicy.REPLACE, notificationWork
+        ).enqueue()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -114,9 +191,4 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
         return true
     }
 
-    /*fun DatePicker.getDate(): Date {
-        val calendar = Calendar.getInstance()
-        calendar.set(year, month, dayOfMonth)
-        return calendar.time
-    }*/
 }
