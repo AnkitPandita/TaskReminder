@@ -2,6 +2,8 @@ package com.example.taskreminder
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.view.LayoutInflater
@@ -66,6 +68,7 @@ class TasksAdapter(private val activity: Activity, private val taskList: ArrayLi
             intent.putExtra(EditActivity.KEY_TASK, taskList[position])
             taskList.removeAt(position)
             editSharedPref()
+            intent.putExtra(EditActivity.KEY_POS, position)
             activity.startActivityForResult(intent, MainActivity.REQUEST_CODE)
         }
 

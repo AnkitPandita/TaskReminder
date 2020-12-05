@@ -56,7 +56,11 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == REQUEST_CODE && resultCode == EditActivity.RESULT_CODE) {
             if (data?.extras?.getSerializable(EditActivity.KEY_TASK) != null) {
                 val task: Task = data.extras?.getSerializable(EditActivity.KEY_TASK) as Task
-                taskList.add(0, task)
+                if (data.extras?.getInt(EditActivity.KEY_POS)!=null){
+                    taskList.add(data.extras!!.getInt(EditActivity.KEY_POS), task)
+                } else {
+                    taskList.add(0, task)
+                }
                 val editor: SharedPreferences.Editor = sharedPreferences.edit()
                 editor.putString(KEY_SP, Gson().toJson(taskList))
                 editor.apply()

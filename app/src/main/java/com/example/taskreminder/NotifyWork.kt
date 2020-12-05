@@ -28,27 +28,28 @@ import com.example.taskreminder.extension.vectorToBitmap
 class NotifyWork(context: Context, params: WorkerParameters) : Worker(context, params) {
 
     override fun doWork(): Result {
-        val id = inputData.getLong(NOTIFICATION_ID, 0).toInt()
-        sendNotification(id)
+        val tag = inputData.getString(KEY_TAG)
+        val title = inputData.getString(KEY_TITLE)
+        val subtitle = inputData.getString(KEY_SUBTITLE)
+        val id = inputData.getInt(KEY_ID, 0)
+        sendNotification(tag, id, title, subtitle)
 
         return success()
     }
 
-    private fun sendNotification(id: Int) {
+    private fun sendNotification(tag: String?, id: Int, title: String?, subtitle: String?) {
         val intent = Intent(applicationContext, MainActivity::class.java)
         intent.flags = FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_CLEAR_TASK
-        intent.putExtra(NOTIFICATION_ID, id)
+        //intent.putExtra(NOTIFICATION_ID, id)
 
         val notificationManager =
             applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
         val bitmap = applicationContext.vectorToBitmap(R.drawable.ic_schedule_black_24dp)
-        val titleNotification = applicationContext.getString(R.string.notification_title)
-        val subtitleNotification = applicationContext.getString(R.string.notification_subtitle)
         val pendingIntent = getActivity(applicationContext, 0, intent, 0)
         val notification = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL)
             .setLargeIcon(bitmap).setSmallIcon(R.drawable.ic_schedule_white)
-            .setContentTitle(titleNotification).setContentText(subtitleNotification)
+            .setContentTitle(title).setContentText(subtitle)
             .setDefaults(DEFAULT_ALL).setContentIntent(pendingIntent).setAutoCancel(true)
 
         notification.priority = PRIORITY_MAX
@@ -71,13 +72,15 @@ class NotifyWork(context: Context, params: WorkerParameters) : Worker(context, p
             notificationManager.createNotificationChannel(channel)
         }
 
-        notificationManager.notify(id, notification.build())
+        notificationManager.notify(tag, id, notification.build())
     }
 
     companion object {
-        lateinit var NOTIFICATION_ID: String
         const val NOTIFICATION_NAME = "appName"
         const val NOTIFICATION_CHANNEL = "appName_channel_01"
-        const val NOTIFICATION_WORK = "appName_notification_work"
+        const val KEY_TAG = "key_tag"
+        const val KEY_TITLE = "key_title"
+        const val KEY_SUBTITLE = "key_subtitle"
+        const val KEY_ID = "key_id"
     }
 }

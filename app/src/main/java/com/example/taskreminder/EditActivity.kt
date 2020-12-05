@@ -1,19 +1,21 @@
 package com.example.taskreminder
 
 import android.app.DatePickerDialog
+import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_edit.*
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -22,8 +24,8 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
     TimePickerDialog.OnTimeSetListener {
     private lateinit var etTitle: EditText
     private lateinit var etBody: EditText
-    lateinit var btnDateTime: Button
-    lateinit var ibCross: ImageButton
+    private lateinit var btnDateTime: Button
+    private lateinit var ibCross: ImageButton
     private var day = 0
     private var month: Int = 0
     private var year: Int = 0
@@ -36,10 +38,12 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
     private var myMinute: Int = 0
     private lateinit var calendar: Calendar
     private var oldTaskObj: Task? = null
+    private lateinit var pendingIntent: PendingIntent
 
     companion object {
         const val RESULT_CODE = 5000
         const val KEY_TASK = "task"
+        const val KEY_POS = "pos"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -156,33 +160,45 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
                 val customTime = cal.timeInMillis
                 val currentTime = System.currentTimeMillis()
                 if (customTime > currentTime) {
-                    NotifyWork.NOTIFICATION_ID = task.id
-                    val notificationData = Data.Builder().putInt(NotifyWork.NOTIFICATION_ID, 0).build()
+                    val notificationData =
+                        Data.Builder().putString(NotifyWork.KEY_TAG, task.id)
+                            .putString(NotifyWork.KEY_TITLE, task.title)
+                            .putString(NotifyWork.KEY_SUBTITLE, task.body)
+                            .putInt(NotifyWork.KEY_ID, customTime.toInt()).build()
                     val delay = customTime - currentTime
-                    scheduleNotification(delay, notificationData)
+                    //cancelNotification(task.id)
+                    scheduleNotification(delay, notificationData, task.id)
                     Log.d("Msg", "Success")
                 } else {
                     Log.d("Msg", "Failed")
-                    // val errorNotificationSchedule = getString(R.string.notification_schedule_error)
-                    // Snackbar.make(coordinator_l, errorNotificationSchedule, Snackbar.LENGTH_LONG).show()
+                    val errorNotificationSchedule = "Failed to schedule notification"
+                    Snackbar.make(etBody, errorNotificationSchedule, Snackbar.LENGTH_LONG).show()
                 }
             }
             intentBack.putExtra(KEY_TASK, task)
+        }
+        if (intent.extras?.getInt(KEY_POS) != null) {
+            intentBack.putExtra(KEY_POS, intent.extras!!.getInt(KEY_POS))
         }
         setResult(RESULT_CODE, intentBack)
         finish()
     }
 
-    private fun scheduleNotification(delay: Long, data: Data) {
+    private fun scheduleNotification(delay: Long, data: Data, workId: String) {
         val notificationWork = OneTimeWorkRequest.Builder(NotifyWork::class.java)
             .setInitialDelay(delay, TimeUnit.MILLISECONDS).setInputData(data).build()
 
         val instanceWorkManager = WorkManager.getInstance(this)
         instanceWorkManager.beginUniqueWork(
-            NotifyWork.NOTIFICATION_WORK,
-            ExistingWorkPolicy.REPLACE, notificationWork
+            workId,
+            ExistingWorkPolicy.APPEND, notificationWork
         ).enqueue()
     }
+
+    /*private fun cancelNotification(workId: String){
+        val instanceWorkManager = WorkManager.getInstance(this)
+        instanceWorkManager.cancelUniqueWork(workId)
+    }*/
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
