@@ -1,7 +1,6 @@
 package com.example.taskreminder
 
 import android.app.DatePickerDialog
-import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
@@ -20,6 +19,12 @@ import kotlinx.android.synthetic.main.activity_edit.*
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+/**
+ *
+ * @author Ankit Pandita, Samuel Garn, Scott Stahlman, Yosif Munther, Zaccary Hudson
+ * This is the activity where user edits the task details (title, note, and date & time)
+ */
+
 class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
     TimePickerDialog.OnTimeSetListener {
     private lateinit var etTitle: EditText
@@ -31,14 +36,13 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
     private var year: Int = 0
     private var hour: Int = 0
     private var minute: Int = 0
-    private var myDay = 0
-    private var myMonth: Int = 0
-    private var myYear: Int = 0
-    private var myHour: Int = 0
-    private var myMinute: Int = 0
+    private var taskDay = 0
+    private var taskMonth: Int = 0
+    private var taskYear: Int = 0
+    private var taskHour: Int = 0
+    private var taskMinute: Int = 0
     private lateinit var calendar: Calendar
     private var oldTaskObj: Task? = null
-    private lateinit var pendingIntent: PendingIntent
 
     companion object {
         const val RESULT_CODE = 5000
@@ -54,11 +58,11 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
         calendar = Calendar.getInstance()
         ibCross = findViewById(R.id.ib_cross)
         ibCross.setOnClickListener {
-            myDay = 0
-            myMonth = 0
-            myYear = 0
-            myHour = 0
-            myMinute = 0
+            taskDay = 0
+            taskMonth = 0
+            taskYear = 0
+            taskHour = 0
+            taskMinute = 0
             btnDateTime.text = "Set Reminder"
             ibCross.visibility = View.GONE
         }
@@ -76,58 +80,61 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
             etBody.setText(oldTaskObj?.body)
             if (oldTaskObj?.date != null) {
                 val date: Date = oldTaskObj!!.date!!
-                myDay = date.date
-                myMonth = date.month + 1
-                myYear = date.year + 1900
-                myHour = date.hours
-                myMinute = date.minutes
+                taskDay = date.date
+                taskMonth = date.month + 1
+                taskYear = date.year + 1900
+                taskHour = date.hours
+                taskMinute = date.minutes
                 val minStr: String
-                if (myMinute / 10 == 0) {
-                    minStr = "0$myMinute"
+                if (taskMinute / 10 == 0) {
+                    minStr = "0$taskMinute"
                 } else {
-                    minStr = "$myMinute"
+                    minStr = "$taskMinute"
                 }
-                btnDateTime.text = "$myMonth/$myDay/$myYear at $myHour:$minStr"
+                btnDateTime.text = "$taskMonth/$taskDay/$taskYear at $taskHour:$minStr"
             }
         }
     }
 
+    // gets called after selecting date
     override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
-        myDay = dayOfMonth
-        myYear = year
-        myMonth = month + 1
+        taskDay = dayOfMonth
+        taskYear = year
+        taskMonth = month + 1
         calendar = Calendar.getInstance()
         hour = calendar.get(Calendar.HOUR_OF_DAY)
         minute = calendar.get(Calendar.MINUTE)
         val timePickerDialog =
             TimePickerDialog(this, this, hour, minute, DateFormat.is24HourFormat(this))
         timePickerDialog.show()
-        btnDateTime.text = "$myMonth/$myDay/$myYear"
+        btnDateTime.text = "$taskMonth/$taskDay/$taskYear"
         ibCross.visibility = View.VISIBLE
     }
 
+    // gets called after selecting time
     override fun onTimeSet(view: TimePicker?, hourOfDay: Int, minute: Int) {
-        myHour = hourOfDay
-        myMinute = minute
+        taskHour = hourOfDay
+        taskMinute = minute
         val minStr: String
-        if (myMinute / 10 == 0) {
-            minStr = "0$myMinute"
+        if (taskMinute / 10 == 0) {
+            minStr = "0$taskMinute"
         } else {
-            minStr = "$myMinute"
+            minStr = "$taskMinute"
         }
-        btnDateTime.text = "$myMonth/$myDay/$myYear at $myHour:$minStr"
+        btnDateTime.text = "$taskMonth/$taskDay/$taskYear at $taskHour:$minStr"
         ibCross.visibility = View.VISIBLE
     }
 
+    // gets called when pressed back
     override fun onBackPressed() {
         val intentBack = Intent()
         val title = etTitle.text.toString().trim()
         val body = etBody.text.toString().trim()
-        val day = myDay
-        val year = myYear
-        val month = myMonth
-        val hour = myHour
-        val min = myMinute
+        val day = taskDay
+        val year = taskYear
+        val month = taskMonth
+        val hour = taskHour
+        val min = taskMinute
 
         if ((!title.contentEquals(""))
             || (!body.contentEquals(""))
@@ -151,8 +158,6 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
                 cal.set(Calendar.HOUR_OF_DAY, hour)
                 cal.set(Calendar.MINUTE, min)
                 cal.set(Calendar.SECOND, 0)
-                // val sdf = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
-                // Log.d("Date", sdf.format(cal.time))
                 dateTime = cal.time
             }
             if (dateTime != null) {
@@ -184,6 +189,7 @@ class EditActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
         finish()
     }
 
+    // for scheduling notification
     private fun scheduleNotification(delay: Long, data: Data, workId: String) {
         val notificationWork = OneTimeWorkRequest.Builder(NotifyWork::class.java)
             .setInitialDelay(delay, TimeUnit.MILLISECONDS).setInputData(data).build()

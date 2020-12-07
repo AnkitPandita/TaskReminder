@@ -1,9 +1,8 @@
 package com.example.taskreminder
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
-import android.app.NotificationManager
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.view.LayoutInflater
@@ -15,6 +14,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import java.text.SimpleDateFormat
 
+/**
+ *
+ * @author Ankit Pandita, Samuel Garn, Scott Stahlman, Yosif Munther, Zaccary Hudson
+ * This is the adapter for the recycler view in the MainActivity that displays all the saved tasks.
+ */
+
 class TasksAdapter(private val activity: Activity, private val taskList: ArrayList<Task>, private val sharedPreferences: SharedPreferences) :
     RecyclerView.Adapter<TasksAdapter.ViewHolder>() {
 
@@ -23,9 +28,9 @@ class TasksAdapter(private val activity: Activity, private val taskList: ArrayLi
      * (custom ViewHolder).
      */
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val textView: TextView = view.findViewById(R.id.textView)
-        val textView2: TextView = view.findViewById(R.id.textView2)
-        val textView3: TextView = view.findViewById(R.id.textView3)
+        val tvTitle: TextView = view.findViewById(R.id.textView)
+        val tvBody: TextView = view.findViewById(R.id.textView2)
+        val tvDate: TextView = view.findViewById(R.id.textView3)
     }
 
     // Create new views (invoked by the layout manager)
@@ -37,6 +42,7 @@ class TasksAdapter(private val activity: Activity, private val taskList: ArrayLi
     }
 
     // Replace the contents of a view (invoked by the layout manager)
+    @SuppressLint("SimpleDateFormat")
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
         // Get element from your dataset at this position and replace the
         // contents of the view with that element
@@ -44,23 +50,23 @@ class TasksAdapter(private val activity: Activity, private val taskList: ArrayLi
         val body = taskList[position].body
         val date = taskList[position].date
         if (title == null || title.contentEquals("")) {
-            viewHolder.textView.visibility = View.GONE
+            viewHolder.tvTitle.visibility = View.GONE
         } else {
-            viewHolder.textView.visibility = View.VISIBLE
-            viewHolder.textView.text = title
+            viewHolder.tvTitle.visibility = View.VISIBLE
+            viewHolder.tvTitle.text = title
         }
         if (body == null || body.contentEquals("")) {
-            viewHolder.textView2.visibility = View.GONE
+            viewHolder.tvBody.visibility = View.GONE
         } else {
-            viewHolder.textView2.visibility = View.VISIBLE
-            viewHolder.textView2.text = body
+            viewHolder.tvBody.visibility = View.VISIBLE
+            viewHolder.tvBody.text = body
         }
         if (date == null) {
-            viewHolder.textView3.visibility = View.GONE
+            viewHolder.tvDate.visibility = View.GONE
         } else {
-            viewHolder.textView3.visibility = View.VISIBLE
+            viewHolder.tvDate.visibility = View.VISIBLE
             val sdf = SimpleDateFormat("MM/dd/yyyy HH:mm")
-            viewHolder.textView3.text = sdf.format(date)
+            viewHolder.tvDate.text = sdf.format(date)
         }
 
         viewHolder.itemView.setOnClickListener {
@@ -90,6 +96,7 @@ class TasksAdapter(private val activity: Activity, private val taskList: ArrayLi
 
     }
 
+    // for editing shared preferences
     private fun editSharedPref(){
         val editor: SharedPreferences.Editor = sharedPreferences.edit()
         editor.putString(MainActivity.KEY_SP, Gson().toJson(taskList))

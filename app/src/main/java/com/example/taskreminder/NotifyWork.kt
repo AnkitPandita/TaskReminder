@@ -23,10 +23,16 @@ import androidx.core.app.NotificationCompat.PRIORITY_MAX
 import androidx.work.ListenableWorker.Result.success
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import com.example.taskreminder.extension.vectorToBitmap
+
+/**
+ *
+ * @author Ankit Pandita, Samuel Garn, Scott Stahlman, Yosif Munther, Zaccary Hudson
+ * This is worker class that used for displaying notifications.
+ */
 
 class NotifyWork(context: Context, params: WorkerParameters) : Worker(context, params) {
 
+    // gets called on each notification event
     override fun doWork(): Result {
         val tag = inputData.getString(KEY_TAG)
         val title = inputData.getString(KEY_TITLE)

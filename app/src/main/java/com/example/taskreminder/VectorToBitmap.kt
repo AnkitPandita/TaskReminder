@@ -1,10 +1,15 @@
-package com.example.taskreminder.extension
+package com.example.taskreminder
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Bitmap.createBitmap
 import android.graphics.Canvas
 import androidx.core.content.ContextCompat.getDrawable
+
+/**
+ *
+ * @author Ankit Pandita, Samuel Garn, Scott Stahlman, Yosif Munther, Zaccary Hudson
+ */
 
 fun Context.vectorToBitmap(drawableId: Int): Bitmap? {
     val drawable = getDrawable(this, drawableId) ?: return null

@@ -12,6 +12,12 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlin.collections.ArrayList
 
+/**
+ *
+ * @author Ankit Pandita, Samuel Garn, Scott Stahlman, Yosif Munther, Zaccary Hudson
+ * This is the home screen of the application where all the saved tasks will be displayed.
+ */
+
 class MainActivity : AppCompatActivity() {
     private lateinit var rvTasks: RecyclerView
     private lateinit var gridLayoutManager: GridLayoutManager
